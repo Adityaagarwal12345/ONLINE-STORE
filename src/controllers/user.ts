@@ -1,15 +1,29 @@
 import { Request, Response, NextFunction } from "express";
 import {User} from "../models/user.js";
-import { NewUserRequestBody } from "../types/types";
+import { NewUserRequestBody } from "../types/types.js";
+import ErrorHandler from "../utils/utility-class.js";
+import { TryCatch } from "../middlewares/error.js";
 
-export const newUser=async(
+export const newUser= TryCatch(async(
     req:Request<{}, {},NewUserRequestBody>,
     res:Response,
     next:NextFunction
 )=>{
-    try{
+        //return next(new ErrorHandler("Mera Custom Error",402));// iska mtlb hai next middle ware ko call krdo this is my error middleware
         const {name,email,photo,gender,_id,dob} = req.body;
-        const user = await User.create({
+
+        let user = await User.findById(_id);
+        if(user){
+            return res.status(200).json({
+                success:true,
+                message:`Welcome back, ${user.name}`,
+            });
+        }
+
+        if(!_id ||! name ||!email||!photo ||!gender ||!dob){
+            return next(new ErrorHandler("Please provide all required fields",400));
+        }
+         user = await User.create({
           name,
           email,
             photo,
@@ -22,10 +36,51 @@ export const newUser=async(
             success:true,
             message:`Welcome, ${user.name}`,
         });
-    }catch(error){
-         return res.status(401).json({
-            success:false,
-            message:error,
-     });
-    }
-}
+    
+});
+//details for all the users
+export const getAllUsers= TryCatch(async(
+    req:Request,
+    res:Response,
+    next:NextFunction
+)=>{
+    const users = await User.find();    
+    return res.status(201).json({
+        success:true,
+        users,
+    });
+});
+//get user by id
+export const getUsers= TryCatch(async(
+    req:Request,
+    res:Response,
+    next:NextFunction
+)=>{
+    const id = req.params.id;
+    const users = await User.findById(id); 
+    if(!users){
+        return next(new ErrorHandler("User not found",404));
+    }   
+    return res.status(201).json({
+        success:true,
+        users,
+    });
+});
+//delete user 
+export const deleteUser= TryCatch(async(
+    req:Request,
+    res:Response,
+    next:NextFunction
+)=>{
+    const id = req.params.id;
+    const users = await User.findById(id); 
+    if(!users){
+        return next(new ErrorHandler("User not found",404));
+    }   
+    await users.deleteOne();
+    return res.status(201).json({
+        success:true,
+        users,
+        message:"User deleted successfully",
+    });
+});
