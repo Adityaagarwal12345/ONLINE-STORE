@@ -42,3 +42,16 @@ export const getlatestProducts = TryCatch(
     });
   }
 );
+
+
+
+export const getallcategories = TryCatch(
+  async (req, res, next) => {
+   
+    const categories = await Product.distinct("category")
+    return res.status(200).json({
+      success: true,
+      categories  // 👈 yeh bhejna zaroori hai bro
+    });
+  }
+);
