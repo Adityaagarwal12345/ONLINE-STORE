@@ -39,3 +39,10 @@ export const getallcategories = TryCatch(async (req, res, next) => {
         categories // 👈 yeh bhejna zaroori hai bro
     });
 });
+export const getAdminProducts = TryCatch(async (req, res, next) => {
+    const products = await Product.find({});
+    return res.status(200).json({
+        success: true,
+        products, // 👈 yeh bhejna zaroori hai bro
+    });
+});
