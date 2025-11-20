@@ -46,3 +46,12 @@ export const getAdminProducts = TryCatch(async (req, res, next) => {
         products, // 👈 yeh bhejna zaroori hai bro
     });
 });
+export const getSingleProduct = TryCatch(async (req, res, next) => {
+    const product = await Product.findById(req.params.id);
+    if (!product)
+        return next(new ErrorHandler("Product not found", 404));
+    return res.status(200).json({
+        success: true,
+        product,
+    });
+});
