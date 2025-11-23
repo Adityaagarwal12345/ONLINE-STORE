@@ -5,6 +5,7 @@ import { deleteProduct,
      getlatestProducts, 
      getSingleProduct, 
      newProduct, 
+     searchProduct, 
      updateProduct } from "../controllers/product.js"
 import { adminOnly } from '../middlewares/auth.js';
 import { singleUpload } from '../middlewares/multer.js';
@@ -16,6 +17,9 @@ app.get("/latest",getlatestProducts);
 app.get("/categories",getallcategories);
 
 app.get("/Admin-product",getAdminProducts);
+app.get("/all",searchProduct);
 
 app.route("/:id").get(getSingleProduct).put(singleUpload,updateProduct).delete(deleteProduct);
+//to get all prodcuts with filter
+
 export default app;

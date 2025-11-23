@@ -84,3 +84,5 @@ export const deleteUser= TryCatch(async(
         message:"User deleted successfully",
     });
 });
+
+//lets create a search route 

@@ -1,6 +1,6 @@
 import { TryCatch } from "../middlewares/error.js";
 import { Request } from "express";
-import { NewProductRequestBody } from "../types/types.js";
+import { BaseQuery, NewProductRequestBody } from "../types/types.js";
 import { Product } from "../models/products.js";
 import ErrorHandler from "../utils/utility-class.js";
 import {rm } from "fs";
@@ -130,6 +130,59 @@ export const deleteProduct = TryCatch(
     return res.status(200).json({
       success: true,
       message:"product deleted successfully",
+    });
+  }
+);
+
+//search new product
+
+export const searchProduct = TryCatch(
+  async (req: Request, res, next) => {
+    const { search, sort, category, price } = req.query;
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(process.env.PRODUCT_PER_PAGE) || 8;
+    const skip = (page - 1) * limit;
+
+    const baseQuery: BaseQuery = {};
+
+    // search by name (regex)
+    if (search) {
+      baseQuery.name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    // filter by price (less than or equal)
+    if (price) {
+      baseQuery.price = {
+        $lte: Number(price),
+      };
+    }
+
+    // filter by category
+    if (category) {
+      baseQuery.category = String(category).toLowerCase();
+    }
+
+    // Fetch data + total count in parallel (FAST ⚡)
+    const [products, filteredOnlyProducts] = await Promise.all([
+      Product.find(baseQuery)
+        .sort(sort ? { price: sort === "asc" ? 1 : -1 } : undefined)
+        .limit(limit)
+        .skip(skip),
+
+      Product.find(baseQuery), // for total count
+    ]);
+
+    const totalPage = Math.ceil(filteredOnlyProducts.length / limit);
+
+    return res.status(200).json({
+      success: true,
+      products,
+      totalPage,
+      currentPage: page,
     });
   }
 );
