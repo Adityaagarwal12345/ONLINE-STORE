@@ -55,3 +55,43 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
         product,
     });
 });
+export const updateProduct = TryCatch(async (req, res, next) => {
+    const { id } = req.params;
+    const { name, price, stock, category } = req.body;
+    const photo = req.file;
+    // 1) Check if product exists
+    const product = await Product.findById(id);
+    if (!product)
+        return next(new ErrorHandler("Invalid product ID", 400));
+    // 2) If new photo uploaded -> delete old & save new path
+    if (photo) {
+        rm(product.photo, () => console.log("Old photo deleted"));
+        product.photo = photo.path;
+    }
+    // 3) Update fields conditionally
+    if (name)
+        product.name = name;
+    if (price)
+        product.price = price;
+    if (stock)
+        product.stock = stock;
+    if (category)
+        product.category = category.toLowerCase();
+    // 4) Save changes
+    await product.save();
+    return res.status(200).json({
+        success: true,
+        message: "Product updated successfully",
+    });
+});
+export const deleteProduct = TryCatch(async (req, res, next) => {
+    const product = await Product.findById(req.params.id);
+    if (!product)
+        return next(new ErrorHandler("Product not found", 404));
+    rm(product.photo, () => console.log("Old photo deleted"));
+    await Product.deleteOne();
+    return res.status(200).json({
+        success: true,
+        message: "product deleted successfully",
+    });
+});

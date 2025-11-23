@@ -1,5 +1,11 @@
 import express from 'express';
-import { getAdminProducts, getallcategories, getlatestProducts, getSingleProduct, newProduct } from "../controllers/product.js"
+import { deleteProduct, 
+    getAdminProducts,
+     getallcategories, 
+     getlatestProducts, 
+     getSingleProduct, 
+     newProduct, 
+     updateProduct } from "../controllers/product.js"
 import { adminOnly } from '../middlewares/auth.js';
 import { singleUpload } from '../middlewares/multer.js';
 const app = express.Router();
@@ -11,5 +17,5 @@ app.get("/categories",getallcategories);
 
 app.get("/Admin-product",getAdminProducts);
 
-app.route("./id").get(getSingleProduct).put(singleUpload);
+app.route("/:id").get(getSingleProduct).put(singleUpload,updateProduct).delete(deleteProduct);
 export default app;
