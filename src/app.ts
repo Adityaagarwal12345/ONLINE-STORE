@@ -5,12 +5,16 @@ import { errorMiddleware } from "./middlewares/error.js";
 
 import userRoutes from "./routes/user.js";
 import productRoutes from "./routes/products.js";
+
+import NodeCache from "node-cache";
 const port = 3000;
 
 
 const app = express();
 
 connectDB();
+
+export const myCache =new NodeCache();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
