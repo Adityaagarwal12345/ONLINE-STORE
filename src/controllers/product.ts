@@ -4,6 +4,7 @@ import { BaseQuery, NewProductRequestBody } from "../types/types.js";
 import { Product } from "../models/products.js";
 import ErrorHandler from "../utils/utility-class.js";
 import {rm } from "fs";
+import {faker} from "@faker-js/faker";
 export const newProduct = TryCatch(
   async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
 
@@ -183,6 +184,32 @@ export const searchProduct = TryCatch(
       products,
       totalPage,
       currentPage: page,
+    });
+  }
+);
+
+
+export const createFakeProducts = TryCatch(
+  async (req, res, next) => {
+    const productsToCreate = 50; // jitne chahiye utne number change kar do
+
+    const fakeProducts = [];
+
+    for (let i = 0; i < productsToCreate; i++) {
+      fakeProducts.push({
+        name: faker.commerce.productName(),
+        price: Math.floor(Math.random() * 90000) + 1000,
+        stock: Math.floor(Math.random() * 30) + 1,
+        category: faker.commerce.department().toLowerCase(),
+        photo: faker.image.url(), // Fake image URL de diya
+      });
+    }
+
+    await Product.insertMany(fakeProducts);
+
+    return res.status(201).json({
+      success: true,
+      message: `${productsToCreate} Fake Products Created Successfully!`,
     });
   }
 );

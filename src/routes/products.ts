@@ -1,5 +1,5 @@
 import express from 'express';
-import { deleteProduct, 
+import { createFakeProducts, deleteProduct, 
     getAdminProducts,
      getallcategories, 
      getlatestProducts, 
@@ -18,7 +18,7 @@ app.get("/categories",getallcategories);
 
 app.get("/Admin-product",getAdminProducts);
 app.get("/all",searchProduct);
-
+app.get("/faker", createFakeProducts);
 app.route("/:id").get(getSingleProduct).put(singleUpload,updateProduct).delete(deleteProduct);
 //to get all prodcuts with filter
 
