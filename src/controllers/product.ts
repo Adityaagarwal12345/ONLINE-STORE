@@ -97,7 +97,15 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
   } else {
     product = await Product.findById(id);
     if (!product) return next(new ErrorHandler("Product not found", 404));
-
+    
+    await Product.create({
+      name,
+      price,
+      stock,
+      category:category.toLowerCase(),
+      photo:photo.path,
+    })
+    await 
     myCache.set(`product-${id}`, JSON.stringify(product));
   }
 
