@@ -3,7 +3,7 @@ import { connectDB } from "./utils/features.js";
 import { errorMiddleware } from "./middlewares/error.js";
 import userRoutes from "./routes/user.js";
 import productRoutes from "./routes/products.js";
-import orderRoutes from "./routes/products.js";
+import orderRoutes from "./routes/order.js";
 import { config } from "dotenv";
 import NodeCache from "node-cache";
 import morgan from 'morgan';
