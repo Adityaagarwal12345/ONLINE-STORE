@@ -79,3 +79,47 @@ export const getSingleOrder = TryCatch(async (req, res, next) => {
         order,
     });
 });
+export const processOrder = TryCatch(async (req, res, next) => {
+    const { Id } = req.params;
+    const order = await Order.findById(Id);
+    if (!order)
+        return next(new ErrorHandler("Order not found", 404));
+    if (order.status === "Delivered") {
+        return next(new ErrorHandler("Order is already delivered", 400));
+    }
+    else if (order.status === "Processing") {
+        order.status = "Shipped";
+    }
+    else if (order.status === "Shipped") {
+        order.status = "Delivered";
+    }
+    await order.save();
+    await invalidateCache({
+        product: true,
+        order: true,
+        admin: true,
+        userId: order.user.toString(),
+        orderId: String(order._id)
+    });
+    return res.status(200).json({
+        success: true,
+        message: "Order status updated to Delivered",
+    });
+});
+export const deleteOrder = TryCatch(async (req, res, next) => {
+    const { Id } = req.params;
+    const order = await Order.findByIdAndDelete(Id);
+    if (!order)
+        return next(new ErrorHandler("Order not found", 404));
+    await invalidateCache({
+        product: true,
+        order: true,
+        admin: true,
+        userId: order.user.toString(),
+        orderId: String(order._id)
+    });
+    return res.status(200).json({
+        success: true,
+        message: "Order deleted successfully",
+    });
+});
