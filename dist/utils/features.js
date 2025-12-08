@@ -1,38 +1,30 @@
-import mongoose from "mongoose";
-import { myCache } from "../app.js";
 import { Product } from "../models/products.js";
-export const connectDB = (uri) => {
-    mongoose.connect(uri, {
-        dbName: "Ecommerce_24",
-    }).then((c) => console.log(`DB connected to ${c.connection.name}`))
-        .catch((e) => console.log(e));
-};
-export const invalidateCache = async ({ product, order, admin }) => {
+import { Order } from "../models/order.js";
+import NodeCache from "node-cache";
+export const myCache = new NodeCache();
+export const invalidateCache = async ({ product, order, admin, }) => {
     if (product) {
-        const productKeys = [
-            "latest-products",
-            "categories",
-            "allProducts"
-        ];
         const products = await Product.find({}).select("_id");
-        products.forEach((i) => {
-            productKeys.push(`product-${i._id}`);
-        });
-        myCache.del(productKeys);
+        products.forEach((p) => myCache.del(`product-${p._id}`));
+        myCache.del("latest-products");
+        myCache.del("categories");
+        myCache.del("all-products-admin");
     }
     if (order) {
+        const orders = await Order.find({}).select("_id user");
+        orders.forEach((o) => myCache.del(`my-orders-${o.user.toString()}`));
+        myCache.del("all-orders");
     }
-    if (order) {
+    if (admin) {
+        myCache.del("admin-stats");
     }
 };
-//creating a functuion to reduce stock
 export const reduceStock = async (orderItems) => {
-    for (let i = 0; i < orderItems.length; i++) {
-        const order = orderItems[i];
-        const product = await Product.findById(order.productId);
+    for (const item of orderItems) {
+        const product = await Product.findById(item.productId);
         if (!product)
-            throw new Error("product not found");
-        product.stock -= order.quantity;
+            continue;
+        product.stock -= item.quantity;
         await product.save();
     }
 };

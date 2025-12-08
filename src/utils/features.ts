@@ -1,45 +1,49 @@
-import mongoose from "mongoose";
-import { OrderItemType } from "../types/types.js";
-import { myCache } from "../app.js";
 import { Product } from "../models/products.js";
+import { Order } from "../models/order.js";
+import NodeCache from "node-cache";
 
-export const connectDB = (uri:string) => {
-    mongoose.connect(uri,{
-    dbName:"Ecommerce_24",
-    }).then((c)=>console.log(`DB connected to ${c.connection.name}`))
-    .catch((e)=>console.log(e));
+export const myCache = new NodeCache();
+
+export interface InvalidateCacheProps {
+  product?: boolean;
+  order?: boolean;
+  admin?: boolean;
+}
+
+export const invalidateCache = async ({
+  product,
+  order,
+  admin,
+}: InvalidateCacheProps) => {
+  if (product) {
+    const products = await Product.find({}).select("_id");
+    products.forEach((p) =>
+      myCache.del(`product-${p._id}`)
+    );
+    myCache.del("latest-products");
+    myCache.del("categories");
+    myCache.del("all-products-admin");
+  }
+
+  if (order) {
+    const orders = await Order.find({}).select("_id user");
+    orders.forEach((o) =>
+      myCache.del(`my-orders-${o.user.toString()}`)
+    );
+    myCache.del("all-orders");
+  }
+
+  if (admin) {
+    myCache.del("admin-stats");
+  }
 };
 
+export const reduceStock = async (orderItems: any[]) => {
+  for (const item of orderItems) {
+    const product = await Product.findById(item.productId);
+    if (!product) continue;
 
-export const invalidateCache =async ({product,order,admin}:InvalidateCacheProps)=>{
-    if(product){
-        const productKeys: string[] = [
-            "latest-products",
-            "categories",
-            "allProducts"
-        ];
-
-        const products = await Product.find({}).select("_id");
-        products.forEach((i)=>{
-           productKeys.push(`product-${i._id}`);
-        });
-        myCache.del(productKeys);
-    }
-    if(order){
-
-    }
-    if(order){
-
-    }
-}
-//creating a functuion to reduce stock
-
-export const reduceStock =async (orderItems:OrderItemType[])=>{
-   for(let i=0;i<orderItems.length;i++){
-    const order = orderItems[i];
-    const product = await Product.findById(order.productId)
-    if(!product) throw new Error("product not found");
-    product.stock -=order.quantity;
+    product.stock -= item.quantity;
     await product.save();
-   }
-}
+  }
+};

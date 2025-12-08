@@ -86,13 +86,13 @@ export const allOrders = TryCatch(async (req, res, next) => {
   });
 });
 export const getSingleOrder = TryCatch(async (req, res, next) => {
-  const { Id } = req.params;
-  const key = `single-order-${Id}`;
+  const { id } = req.params;
+  const key = `single-order-${id}`;
   let order;
   if (myCache.has(key)) {
     order = JSON.parse(myCache.get(key) as string);
   } else {    
-    order = await Order.findById(Id).populate("user", "name email");
+    order = await Order.findById(id).populate("user", "name email");
     myCache.set(key, JSON.stringify(order));
   }
   if (!order) return next(new ErrorHandler("Order not found", 404));
@@ -103,43 +103,46 @@ export const getSingleOrder = TryCatch(async (req, res, next) => {
 
 });
 export const processOrder = TryCatch(async (req, res, next) => {
-  const { Id } = req.params;
-  const order = await Order.findById(Id);
+  const { id } = req.params;
+  const order = await Order.findById(id);
+
   if (!order) return next(new ErrorHandler("Order not found", 404));
 
- if (order.status === "Delivered") {  
+  if (order.status === "Delivered") {
     return next(new ErrorHandler("Order is already delivered", 400));
-  } else if (order.status === "Processing") {
-    order.status = "Shipped";
-  } else if (order.status === "Shipped") {
-    order.status = "Delivered";
   }
 
+  if (order.status === "Processing") order.status = "Shipped";
+  else if (order.status === "Shipped") order.status = "Delivered";
+
   await order.save();
+
   await invalidateCache({
-     product: true,
-     order: true,
-     admin: true,
-      userId:order.user.toString(),
-      orderId:String(order._id)});
+    product: true,
+    order: true,
+    admin: true,
+  });
+
   return res.status(200).json({
     success: true,
-    message: "Order status updated to Delivered",
-  }); 
+    message: `Order status updated: ${order.status}`
+  });
 });
-export const deleteOrder = TryCatch(async (req, res, next) => { 
-  const { Id } = req.params;
-  const order = await Order.findByIdAndDelete(Id);
+
+export const deleteOrder = TryCatch(async (req, res, next) => {
+  const { id } = req.params;
+  const order = await Order.findByIdAndDelete(id);
+
   if (!order) return next(new ErrorHandler("Order not found", 404));
-  await invalidateCache({ 
+
+  await invalidateCache({
     product: true,
-     order: true,
+    order: true,
     admin: true,
-     userId:order.user.toString(),
-      orderId:String(order._id)});
+  });
+
   return res.status(200).json({
     success: true,
     message: "Order deleted successfully",
   });
 });
-
