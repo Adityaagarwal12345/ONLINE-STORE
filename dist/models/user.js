@@ -27,15 +27,18 @@ const schema = new mongoose.Schema({
     gender: {
         type: String,
         enum: ["male", "female"],
-        required: [true, "please enter gender "],
+        required: [true, "please enter gender"],
     },
     dob: {
         type: Date,
         required: [true, "please enter date of birth"],
     },
-}, {
-    timestamps: true
-});
+    password: {
+        type: String,
+        required: [true, "please enter password"],
+        select: false
+    }
+}, { timestamps: true });
 schema.virtual("age").get(function () {
     const today = new Date();
     const dob = this.dob;

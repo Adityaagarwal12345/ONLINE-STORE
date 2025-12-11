@@ -23,6 +23,8 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
     res.send("Welcome to E-commerce with /api/v1/user for user routes");
 });
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/order", orderRoutes);

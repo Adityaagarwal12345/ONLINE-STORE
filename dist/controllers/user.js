@@ -1,9 +1,14 @@
 import { User } from "../models/user.js";
 import ErrorHandler from "../utils/utility-class.js";
 import { TryCatch } from "../middlewares/error.js";
+import bcrypt from "bcrypt";
+//create new user
 export const newUser = TryCatch(async (req, res, next) => {
-    //return next(new ErrorHandler("Mera Custom Error",402));// iska mtlb hai next middle ware ko call krdo this is my error middleware
-    const { name, email, photo, gender, _id, dob } = req.body;
+    const { name, email, photo, gender, _id, dob, password } = req.body;
+    if (!name || !email || !photo || !gender || !dob || !_id || !password) {
+        return next(new ErrorHandler("Please provide all fields", 400));
+    }
+    // Already exists?
     let user = await User.findById(_id);
     if (user) {
         return res.status(200).json({
@@ -11,20 +16,36 @@ export const newUser = TryCatch(async (req, res, next) => {
             message: `Welcome back, ${user.name}`,
         });
     }
-    if (!_id || !name || !email || !photo || !gender || !dob) {
-        return next(new ErrorHandler("Please provide all required fields", 400));
-    }
+    const hashedPassword = await bcrypt.hash(password, 10);
     user = await User.create({
+        _id,
         name,
         email,
         photo,
         gender,
-        _id,
         dob: new Date(dob),
+        password: hashedPassword,
     });
     return res.status(201).json({
         success: true,
         message: `Welcome, ${user.name}`,
+    });
+});
+//login user (email+password)
+export const loginUser = TryCatch(async (req, res, next) => {
+    const { email, password } = req.body;
+    if (!email || !password)
+        return next(new ErrorHandler("Please enter email & password", 400));
+    const user = await User.findOne({ email }).select("+password");
+    if (!user)
+        return next(new ErrorHandler("User not found", 404));
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+        return next(new ErrorHandler("Incorrect password", 401));
+    return res.status(200).json({
+        success: true,
+        message: `Welcome back, ${user.name}`,
+        user,
     });
 });
 //details for all the users

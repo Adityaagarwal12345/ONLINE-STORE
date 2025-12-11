@@ -1,21 +1,16 @@
-import express from 'express';
-import { deleteUser, getAllUsers, getUsers, newUser } from '../controllers/user.js';
-import { adminOnly } from '../middlewares/auth.js';
+import express from "express";
+import { newUser, loginUser, getAllUsers, getUsers, deleteUser } from "../controllers/user.js";
+import { adminOnly } from "../middlewares/auth.js";
 
-const app = express.Router();
-//route -/api/v1/user/new
-app.post("/new",newUser);
+const router = express.Router();
 
-//route- /api/vi/user/all
-app.get("/all", adminOnly, getAllUsers);
+router.post("/new", newUser);
+router.post("/login", loginUser);
 
+router.get("/all", adminOnly, getAllUsers);
 
-app.route("/:id").get(getUsers).delete(adminOnly, deleteUser);
-//route- /api/vi/user/dynamic id
-//app.get("/:id",getUsers);
+router.route("/:id")
+  .get(getUsers)
+  .delete(adminOnly, deleteUser);
 
-
-//route for delete user- /api/vi/user/dynamic id
-//app.get("/:id",deleteUser);
-
-export default app;
+export default router;
